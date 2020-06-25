@@ -35,10 +35,6 @@ module RailsAdmin
             true
           end
 
-          def associated_primary_key
-            @associated_primary_key ||= association.primary_key
-          end
-
           def selected_id
             bindings[:object].send(foreign_key)
           end

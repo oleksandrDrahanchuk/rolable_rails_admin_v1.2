@@ -10,15 +10,7 @@ module RailsAdmin
           RailsAdmin::Config::Fields::Types.register(:jsonb, self)
 
           register_instance_option :formatted_value do
-            value ? JSON.pretty_generate(value) : nil
-          end
-
-          register_instance_option :pretty_value do
-            bindings[:view].content_tag(:pre) { formatted_value }.html_safe
-          end
-
-          register_instance_option :export_value do
-            formatted_value
+            value.present? ? JSON.pretty_generate(value) : nil
           end
 
           def parse_value(value)

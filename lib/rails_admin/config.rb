@@ -59,15 +59,8 @@ module RailsAdmin
       # Set the max width of columns in list view before a new set is created
       attr_accessor :total_columns_width
 
-      # Enable horizontal-scrolling table in list view, ignore total_columns_width
-      attr_accessor :sidescroll
-
       # set parent controller
       attr_accessor :parent_controller
-
-      # set settings for `protect_from_forgery` method
-      # By default, it raises exception upon invalid CSRF tokens
-      attr_accessor :forgery_protection_settings
 
       # Stores model configuration objects in a hash identified by model's class
       # name.
@@ -141,11 +134,11 @@ module RailsAdmin
       #   end
       #
       # To use an authorization adapter, pass the name of the adapter. For example,
-      # to use with CanCanCan[https://github.com/CanCanCommunity/cancancan/], pass it like this.
+      # to use with CanCan[https://github.com/ryanb/cancan], pass it like this.
       #
-      # @example CanCanCan
+      # @example CanCan
       #   RailsAdmin.config do |config|
-      #     config.authorize_with :cancancan
+      #     config.authorize_with :cancan
       #   end
       #
       # See the wiki[https://github.com/sferik/rails_admin/wiki] for more on authorization.
@@ -210,7 +203,9 @@ module RailsAdmin
 
       # pool of all found model names from the whole application
       def models_pool
-        (viable_models - excluded_models.collect(&:to_s)).uniq.sort
+        excluded = (excluded_models.collect(&:to_s) + %w(RailsAdmin::History PaperTrail::Version PaperTrail::VersionAssociation))
+
+        (viable_models - excluded).uniq.sort
       end
 
       # Loads a model configuration instance from the registry or registers
@@ -286,7 +281,6 @@ module RailsAdmin
         @excluded_models = []
         @included_models = []
         @total_columns_width = 697
-        @sidescroll = nil
         @label_methods = [:name, :title]
         @main_app_name = proc { [Rails.application.engine_name.titleize.chomp(' Application'), 'Admin'] }
         @registry = {}
@@ -294,7 +288,6 @@ module RailsAdmin
         @navigation_static_links = {}
         @navigation_static_label = nil
         @parent_controller = '::ActionController::Base'
-        @forgery_protection_settings = {with: :exception}
         RailsAdmin::Config::Actions.reset
       end
 
@@ -304,14 +297,6 @@ module RailsAdmin
       def reset_model(model)
         key = model.is_a?(Class) ? model.name.to_sym : model.to_sym
         @registry.delete(key)
-      end
-
-      # Reset all models configuration
-      # Used to clear all configurations when reloading code in development.
-      # @see RailsAdmin::Engine
-      # @see RailsAdmin::Config.registry
-      def reset_all_models
-        @registry = {}
       end
 
       # Get all models that are configured as visible sorted by their weight and label.
@@ -346,7 +331,7 @@ module RailsAdmin
                   end
                 end
               end
-            end.flatten.reject { |m| m.starts_with?('Concerns::') } # rubocop:disable Style/MultilineBlockChain
+            end.flatten.reject { |m| m.starts_with?('Concerns::') } # rubocop:disable MultilineBlockChain
         end
       end
 

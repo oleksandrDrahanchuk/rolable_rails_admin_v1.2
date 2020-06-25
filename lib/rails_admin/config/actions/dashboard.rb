@@ -12,13 +12,9 @@ module RailsAdmin
           nil
         end
 
-        register_instance_option :auditing_versions_limit do
-          100
-        end
-
         register_instance_option :controller do
           proc do
-            @history = @auditing_adapter && @auditing_adapter.latest(@action.auditing_versions_limit) || []
+            @history = @auditing_adapter && @auditing_adapter.latest || []
             if @action.statistics?
               @abstract_models = RailsAdmin::Config.visible_models(controller: self).collect(&:abstract_model)
 

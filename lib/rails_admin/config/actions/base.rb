@@ -18,22 +18,6 @@ module RailsAdmin
           []
         end
 
-        register_instance_option :show_in_navigation do
-          root?
-        end
-
-        register_instance_option :show_in_sidebar do
-          !show_in_navigation
-        end
-
-        register_instance_option :show_in_menu do
-          true
-        end
-
-        register_instance_option :sidebar_label do
-          nil
-        end
-
         # http://getbootstrap.com/2.3.2/base-css.html#icons
         register_instance_option :link_icon do
           'icon-question-sign'
@@ -99,7 +83,7 @@ module RailsAdmin
           key.to_sym
         end
 
-        # For CanCanCan and the like
+        # For Cancan and the like
         register_instance_option :authorization_key do
           key.to_sym
         end

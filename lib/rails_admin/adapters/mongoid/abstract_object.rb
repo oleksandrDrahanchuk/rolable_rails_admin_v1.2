@@ -7,7 +7,6 @@ module RailsAdmin
         def initialize(object)
           super
           object.associations.each do |name, association|
-            association = Association.new(association, object.class)
             if [:has_many, :references_many].include? association.macro
               instance_eval <<-RUBY, __FILE__, __LINE__ + 1
                 def #{name.to_s.singularize}_ids
@@ -29,7 +28,9 @@ RUBY
                 def #{name}_id=(item_id)
                   item = (#{association.klass}.find(item_id) rescue nil)
                   return unless item
-                  item.update_attribute('#{association.foreign_key}', id) unless persisted?
+                  unless persisted?
+                    item.update_attribute('#{association.foreign_key}', id)
+                  end
                   super item.id
                 end
 RUBY

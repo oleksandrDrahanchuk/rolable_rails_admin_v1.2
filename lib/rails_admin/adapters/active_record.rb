@@ -64,10 +64,6 @@ module RailsAdmin
         end
       end
 
-      def base_class
-        model.base_class
-      end
-
       delegate :primary_key, :table_name, to: :model, prefix: false
 
       def encoding
@@ -105,7 +101,13 @@ module RailsAdmin
 
         def add(field, value, operator)
           field.searchable_columns.flatten.each do |column_infos|
-            statement, value1, value2 = StatementBuilder.new(column_infos[:column], column_infos[:type], value, operator, @scope.connection.adapter_name).to_statement
+            value =
+              if value.is_a?(Array)
+                value.map { |v| field.parse_value(v) }
+              else
+                field.parse_value(value)
+              end
+            statement, value1, value2 = StatementBuilder.new(column_infos[:column], column_infos[:type], value, operator).to_statement
             @statements << statement if statement.present?
             @values << value1 unless value1.nil?
             @values << value2 unless value2.nil?
@@ -122,17 +124,12 @@ module RailsAdmin
       end
 
       def query_scope(scope, query, fields = config.list.fields.select(&:queryable?))
-        if config.list.search_by
-          scope.send(config.list.search_by, query)
-        else
-          wb = WhereBuilder.new(scope)
-          fields.each do |field|
-            value = parse_field_value(field, query)
-            wb.add(field, value, field.search_operator)
-          end
-          # OR all query statements
-          wb.build
+        wb = WhereBuilder.new(scope)
+        fields.each do |field|
+          wb.add(field, field.parse_value(query), field.search_operator)
         end
+        # OR all query statements
+        wb.build
       end
 
       # filters example => {"string_field"=>{"0055"=>{"o"=>"like", "v"=>"test_value"}}, ...}
@@ -144,7 +141,7 @@ module RailsAdmin
             field = fields.detect { |f| f.name.to_s == field_name }
             value = parse_field_value(field, filter_dump[:v])
 
-            wb.add(field, value, (filter_dump[:o] || RailsAdmin::Config.default_search_operator))
+            wb.add(field, value, (filter_dump[:o] || 'default'))
             # AND current filter statements to other filter statements
             scope = wb.build
           end
@@ -153,23 +150,16 @@ module RailsAdmin
       end
 
       def build_statement(column, type, value, operator)
-        StatementBuilder.new(column, type, value, operator, model.connection.adapter_name).to_statement
+        StatementBuilder.new(column, type, value, operator).to_statement
       end
 
       class StatementBuilder < RailsAdmin::AbstractModel::StatementBuilder
-        def initialize(column, type, value, operator, adapter_name)
-          super column, type, value, operator
-          @adapter_name = adapter_name
-        end
-
       protected
 
         def unary_operators
           case @type
           when :boolean
             boolean_unary_operators
-          when :integer, :decimal, :float
-            numeric_unary_operators
           else
             generic_unary_operators
           end
@@ -196,7 +186,6 @@ module RailsAdmin
             '_not_empty' => ["(#{@column} IS NOT NULL)"],
           )
         end
-        alias_method :numeric_unary_operators, :boolean_unary_operators
 
         def range_filter(min, max)
           if min && max
@@ -236,8 +225,6 @@ module RailsAdmin
         def build_statement_for_string_or_text
           return if @value.blank?
 
-          return ["(#{@column} = ?)", @value] if ['is', '='].include?(@operator)
-
           unless ['postgresql', 'postgis'].include? ar_adapter
             @value = @value.mb_chars.downcase
           end
@@ -250,6 +237,8 @@ module RailsAdmin
               "#{@value}%"
             when 'ends_with'
               "%#{@value}"
+            when 'is', '='
+              @value
             else
               return
             end
@@ -274,7 +263,7 @@ module RailsAdmin
         end
 
         def ar_adapter
-          @adapter_name.downcase
+          ::ActiveRecord::Base.connection.adapter_name.downcase
         end
       end
     end

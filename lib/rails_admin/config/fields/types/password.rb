@@ -13,11 +13,7 @@ module RailsAdmin
           end
 
           def parse_input(params)
-            if params[name].present?
-              params[name] = params[name]
-            else
-              params.delete(name)
-            end
+            params[name] = params[name].presence
           end
 
           register_instance_option :formatted_value do

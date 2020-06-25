@@ -70,8 +70,8 @@ module RailsAdmin
       private
 
         def object_field_type
-          association = Association.new model.relations.values.detect { |r| r.try(:foreign_key).try(:to_sym) == name }, model
-          if [:belongs_to, :referenced_in, :embedded_in].include?(association.macro)
+          if [:belongs_to, :referenced_in, :embedded_in].
+             include?(model.relations.values.detect { |r| r.foreign_key.try(:to_sym) == name }.try(:macro).try(:to_sym))
             :bson_object_id
           else
             :string

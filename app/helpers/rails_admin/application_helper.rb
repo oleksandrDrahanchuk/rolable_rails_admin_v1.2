@@ -84,24 +84,9 @@ module RailsAdmin
       end.join.html_safe
     end
 
-    def root_navigation
-      actions(:root).select(&:show_in_sidebar).group_by(&:sidebar_label).collect do |label, nodes|
-        li_stack = nodes.map do |node|
-          url = rails_admin.url_for(action: node.action_name, controller: "rails_admin/main")
-          nav_icon = node.link_icon ? %(<i class="#{node.link_icon}"></i>).html_safe : ''
-          content_tag :li do
-            link_to nav_icon + " " + wording_for(:menu, node), url, class: "pjax"
-          end
-        end.join.html_safe
-        label ||= t('admin.misc.root_navigation')
-
-        %(<li class='dropdown-header'>#{capitalize_first_letter label}</li>#{li_stack}) if li_stack.present?
-      end.join.html_safe
-    end
-
     def static_navigation
       li_stack = RailsAdmin::Config.navigation_static_links.collect do |title, url|
-        content_tag(:li, link_to(title.to_s, url, target: '_blank', rel: 'noopener noreferrer'))
+        content_tag(:li, link_to(title.to_s, url, target: '_blank'))
       end.join
 
       label = RailsAdmin::Config.navigation_static_label || t('admin.misc.navigation_static_label')
@@ -125,7 +110,7 @@ module RailsAdmin
     def breadcrumb(action = @action, _acc = [])
       begin
         (parent_actions ||= []) << action
-      end while action.breadcrumb_parent && (action = action(*action.breadcrumb_parent)) # rubocop:disable Lint/Loop
+      end while action.breadcrumb_parent && (action = action(*action.breadcrumb_parent)) # rubocop:disable Loop
 
       content_tag(:ol, class: 'breadcrumb') do
         parent_actions.collect do |a|
@@ -153,7 +138,7 @@ module RailsAdmin
 
     # parent => :root, :collection, :member
     def menu_for(parent, abstract_model = nil, object = nil, only_icon = false) # perf matters here (no action view trickery)
-      actions = actions(parent, abstract_model, object).select { |a| a.http_methods.include?(:get) && a.show_in_menu }
+      actions = actions(parent, abstract_model, object).select { |a| a.http_methods.include?(:get) }
       actions.collect do |action|
         wording = wording_for(:menu, action)
         %(
@@ -175,7 +160,7 @@ module RailsAdmin
           content_tag(:ul, class: 'dropdown-menu', style: 'left:auto; right:0;') do
             actions.collect do |action|
               content_tag :li do
-                link_to wording_for(:bulk_link, action, abstract_model), '#', class: 'bulk-link', data: {action: action.action_name}
+                link_to wording_for(:bulk_link, action), '#', onclick: "jQuery('#bulk_action').val('#{action.action_name}'); jQuery('#bulk_form').submit(); return false;"
               end
             end.join.html_safe
           end

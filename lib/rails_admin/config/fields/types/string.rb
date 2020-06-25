@@ -1,10 +1,10 @@
-require 'rails_admin/config/fields/types/string_like'
+require 'rails_admin/config/fields/base'
 
 module RailsAdmin
   module Config
     module Fields
       module Types
-        class String < StringLike
+        class String < RailsAdmin::Config::Fields::Base
           RailsAdmin::Config::Fields::Types.register(self)
 
           def input_size

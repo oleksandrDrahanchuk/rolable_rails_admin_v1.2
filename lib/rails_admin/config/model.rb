@@ -44,8 +44,7 @@ module RailsAdmin
       end
 
       def excluded?
-        return @excluded if defined?(@excluded)
-        @excluded = !RailsAdmin::AbstractModel.all.collect(&:model_name).include?(abstract_model.try(:model_name))
+        @excluded ||= !RailsAdmin::AbstractModel.all.collect(&:model_name).include?(abstract_model.try(:model_name))
       end
 
       def object_label
@@ -88,7 +87,7 @@ module RailsAdmin
 
       register_instance_option :navigation_label do
         @navigation_label ||= begin
-          if (parent_module = abstract_model.model.try(:module_parent) || abstract_model.model.try!(:parent)) != Object
+          if (parent_module = abstract_model.model.parent) != Object
             parent_module.to_s
           end
         end
@@ -100,8 +99,8 @@ module RailsAdmin
 
       # Act as a proxy for the base section configuration that actually
       # store the configurations.
-      def method_missing(method_name, *args, &block)
-        send(:base).send(method_name, *args, &block)
+      def method_missing(m, *args, &block)
+        send(:base).send(m, *args, &block)
       end
     end
   end

@@ -11,9 +11,7 @@ module RailsAdmin
   end
 
   class ApplicationController < Config.parent_controller.constantize
-    include RailsAdmin::Extensions::ControllerExtension
-
-    protect_from_forgery(Config.forgery_protection_settings)
+    protect_from_forgery with: :exception
 
     before_action :_authenticate!
     before_action :_authorize!

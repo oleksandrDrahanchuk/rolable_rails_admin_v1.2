@@ -1,3 +1,5 @@
+require 'sass'
+
 module Sass
   module Script
     module Functions
@@ -10,7 +12,7 @@ module Sass
         alphastr = alpha.to_s(16).rjust(2, '0')
         Sass::Script::String.new("##{alphastr}#{color.send(:hex_str)[1..-1]}".upcase)
       end
-      declare :ie_hex_str, [:color] if respond_to?(:declare)
+      declare :ie_hex_str, [:color]
     end
   end
 end

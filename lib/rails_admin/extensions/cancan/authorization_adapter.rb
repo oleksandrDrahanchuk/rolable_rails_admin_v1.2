@@ -1,7 +1,9 @@
 module RailsAdmin
   module Extensions
-    module CanCanCan
-      # This adapter is for the CanCanCan[https://github.com/CanCanCommunity/cancancan] authorization library.
+    module CanCan
+      # This adapter is for the CanCan[https://github.com/ryanb/cancan] authorization library.
+      # You can create another adapter for different authorization behavior, just be certain it
+      # responds to each of the public methods here.
       class AuthorizationAdapter
         # See the +authorize_with+ config method for where the initialization happens.
         def initialize(controller, ability = ::Ability)

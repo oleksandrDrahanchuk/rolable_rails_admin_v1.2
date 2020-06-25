@@ -23,10 +23,6 @@ module RailsAdmin
             nil
           end
 
-          register_instance_option :cache_value do
-            bindings[:object].public_send(cache_method) if cache_method
-          end
-
           register_instance_option :export_value do
             resource_url.to_s
           end
@@ -38,9 +34,9 @@ module RailsAdmin
               if image
                 thumb_url = resource_url(thumb_method)
                 image_html = v.image_tag(thumb_url, class: 'img-thumbnail')
-                url != thumb_url ? v.link_to(image_html, url, target: '_blank', rel: 'noopener noreferrer') : image_html
+                url != thumb_url ? v.link_to(image_html, url, target: '_blank') : image_html
               else
-                v.link_to(value, url, target: '_blank', rel: 'noopener noreferrer')
+                v.link_to(nil, url, target: '_blank')
               end
             end
           end

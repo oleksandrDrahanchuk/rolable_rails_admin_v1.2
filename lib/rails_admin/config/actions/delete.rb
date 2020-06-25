@@ -8,12 +8,12 @@ module RailsAdmin
           true
         end
 
-        register_instance_option :show_in_menu do
-          bindings[:controller].current_user.admin?          
-        end
-
         register_instance_option :route_fragment do
           'delete'
+        end
+
+        register_instance_option :show_in_menu do
+          bindings[:controller].current_user.admin?          
         end
 
         register_instance_option :http_methods do

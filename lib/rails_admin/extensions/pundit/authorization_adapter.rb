@@ -7,7 +7,9 @@ module RailsAdmin
       class AuthorizationAdapter
         # This method is called first time only and used for setup
         def self.setup
-          RailsAdmin::Extensions::ControllerExtension.send(:include, ::Pundit)
+          RailsAdmin::ApplicationController.class_eval do
+            include ::Pundit
+          end unless RailsAdmin::ApplicationController.ancestors.include? 'Pundit'
         end
 
         # See the +authorize_with+ config method for where the initialization happens.
@@ -41,7 +43,7 @@ module RailsAdmin
         # and bulk_delete/destroy actions and should return a scope which limits the records
         # to those which the user can perform the given action on.
         def query(_action, abstract_model)
-          @controller.send(:policy_scope, abstract_model.model.all)
+          @controller.policy_scope(abstract_model.model.all)
         rescue ::Pundit::NotDefinedError
           abstract_model.model.all
         end
@@ -57,7 +59,7 @@ module RailsAdmin
       private
 
         def policy(record)
-          @controller.send(:policy, record)
+          @controller.policy(record)
         rescue ::Pundit::NotDefinedError
           ::ApplicationPolicy.new(@controller.send(:pundit_user), record)
         end
